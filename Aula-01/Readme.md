@@ -1,4 +1,4 @@
-# Treinamento: Introdução ao Ansible no Ubuntu
+# Treinamento: Introdução ao Ansible
 
 ## Objetivo
 
