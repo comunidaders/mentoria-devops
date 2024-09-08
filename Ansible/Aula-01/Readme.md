@@ -104,7 +104,6 @@ Para permitir que o Ansible execute comandos com sudo sem solicitar uma senha, v
 Um Playbook básico (`site.yml`):
 
 ```yaml
----
 - name: Exemplo de Playbook Ansible
   hosts: servers
   become: yes
@@ -118,7 +117,6 @@ Um Playbook básico (`site.yml`):
       service:
         name: nginx
         state: started
----
 - name: Exemplo de Playbook com Ansible Facts
   hosts: servers
   tasks:
