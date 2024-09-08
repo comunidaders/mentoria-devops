@@ -138,7 +138,6 @@ Um Playbook que utiliza facts (facts.yml):
 
 
 ```yaml
-
 ---
 - name: Exemplo de Playbook com Ansible Facts
   hosts: servers
@@ -147,3 +146,29 @@ Um Playbook que utiliza facts (facts.yml):
       debug:
         msg: "O sistema operacional é {{ ansible_distribution }} {{ ansible_distribution_version }} rodando em {{ ansible_architecture }}"
 ```
+#### 9. Executando Playbooks
+
+Depois de escrever seu primeiro playbook, o próximo passo é executá-lo. Para isso, use o comando ansible-playbook seguido do nome do arquivo do playbook.
+
+Exemplo de execução de playbook:
+
+```bash
+ansible-playbook site.yml
+```
+Este comando executa o playbook site.yml nos hosts definidos no inventário. O Ansible vai se conectar aos hosts via SSH e executar as tarefas especificadas no playbook.
+
+Se você quiser executar o playbook em um inventário específico, você pode usar a opção -i para especificar o arquivo de inventário:
+
+```bash
+ansible-playbook -i inventario.yml site.yml
+```
+Verificando o resultado: Após a execução, o Ansible exibirá um relatório das tarefas executadas, indicando se elas foram bem-sucedidas ou se houve alguma alteração no sistema (ex.: instalação de um pacote ou reinício de um serviço).
+
+10. Recursos Adicionais
+
+Para se aprofundar no Ansible e continuar sua jornada de automação, aqui estão alguns recursos adicionais recomendados:
+
+Documentação oficial do Ansible: A documentação oficial do Ansible é um excelente ponto de partida para aprender mais sobre módulos, best practices, roles e outros tópicos avançados. Documentação do Ansible
+
+Ansible Galaxy: Ansible Galaxy é uma comunidade onde você pode baixar e compartilhar roles criadas por outros usuários. Ansible Galaxy
+
