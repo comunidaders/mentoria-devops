@@ -65,8 +65,8 @@ pacote: nginx
 ansible_host: 192.168.1.101
 ansible_user: adminlx
 ansible_become: yes
-host_vars/web02.yml (para web02 rodando CentOS e Apache)
 ```
+host_vars/web02.yml (para web02 rodando CentOS e Apache)
 ```yaml
 
 ---
