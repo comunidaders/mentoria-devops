@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bem-vindo ao Template de Site</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            color: #555;
+        }
+        .info {
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #007bff;
+        }
+        .info p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bem-vindo ao Template de Site Aplicado com Jinja2</h1>
+        <p>Este é um exemplo de site gerado automaticamente com variáveis do Ansible Facts.</p>
+
+        <div class="info">
+            <h2>Informações do Servidor</h2>
+            <p><strong>Nome do Servidor:</strong> {{ ansible_hostname }}</p>
+            <p><strong>Versão do Sistema Operacional:</strong> {{ ansible_distribution }} {{ ansible_distribution_version }}</p>
+            <p><strong>Endereço IP:</strong> {{ ansible_default_ipv4.address }}</p>
+            <p><strong>Máscara de Rede:</strong> {{ ansible_default_ipv4.netmask }}</p>
+            <p><strong>Gateway Padrão:</strong> {{ ansible_default_ipv4.gateway }}</p>
+        </div>
+    </div>
+</body>
+</html>
