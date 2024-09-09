@@ -18,7 +18,6 @@ O Ansible irá buscar os arquivos específicos de cada host no diretório `host_
 ├── inventario.ini         # O arquivo de inventário
 ├── host_vars/             # Diretório contendo variáveis específicas de cada host
 │   ├── web01.yml          # Variáveis específicas para web01
-│   └── web02.yml          # Variáveis específicas para web02
 └── roles/
     └── role_base/         # Role criada com Ansible Galaxy
         ├── tasks/
@@ -47,10 +46,9 @@ Este inventário lista os hosts web01 e web02 no grupo webservers. O Ansible uti
 
 ```ini
 
-# inventario.ini
+# inventory
 [webservers]
 web01 ansible_host=192.168.1.101
-web02 ansible_host=192.168.1.102
 ```
 
 ## 5. Diretório host_vars/ (Definindo Variáveis por Host)
@@ -62,19 +60,9 @@ host_vars/web01.yml (para web01 rodando Ubuntu e Nginx)
 ---
 # Variáveis específicas para web01 (Ubuntu e Nginx)
 pacote: nginx
-ansible_host: 192.168.1.101
-ansible_user: adminlx
-ansible_become: yes
-```
-host_vars/web02.yml (para web02 rodando CentOS e Apache)
-```yaml
+ansible_host: 192.168.2.74
+server_name: web01
 
----
-# Variáveis específicas para web02 (CentOS e Apache)
-pacote: httpd
-ansible_host: 192.168.1.102
-ansible_user: adminlx
-ansible_become: yes
 ```
 
 ## 6. Role role_base (Estrutura da Role)
@@ -85,38 +73,41 @@ Este arquivo contém as tarefas que instalam o pacote adequado e configuram o se
 
 ```yaml
 ---
-# Instalar o pacote correto com base no sistema operacional
-- name: Instalar {{ pacote }} no Ubuntu
-  apt:
-    name: "{{ pacote }}"
-    state: present
+---
+
+- name: Criar o diretório de logs do Nginx
+  file:
+    path: /var/log/nginx/{{ server_name }}
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+
+- name: Remover o link simbólico padrão do Nginx
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
   when: ansible_distribution == "Ubuntu"
   notify: "Reiniciar Nginx"
 
-- name: Instalar {{ pacote }} no CentOS
-  yum:
-    name: "{{ pacote }}"
-    state: present
-  when: ansible_distribution == "CentOS"
-  notify: "Reiniciar Apache"
-
-# Configurar o serviço no Ubuntu
-- name: Configurar {{ pacote }} no Ubuntu
-  lineinfile:
-    path: /etc/nginx/nginx.conf
-    regexp: '^listen'
-    line: "listen {{ port }};"
+- name: Aplicar template de Virtual Host e substituir o padrão
+  template:
+    src: templates/virtual_host.j2
+    dest: /etc/nginx/sites-enabled/default
   when: ansible_distribution == "Ubuntu"
   notify: "Reiniciar Nginx"
 
-# Configurar o serviço no CentOS
-- name: Configurar {{ pacote }} no CentOS
-  lineinfile:
-    path: /etc/httpd/conf/httpd.conf
-    regexp: '^Listen'
-    line: "Listen {{ port }}"
-  when: ansible_distribution == "CentOS"
-  notify: "Reiniciar Apache"
+- name: Verificar a configuração do Nginx
+  command: nginx -t
+  register: nginx_config_test
+  when: ansible_distribution == "Ubuntu"
+  changed_when: false
+
+- name: Exibir saída da verificação do Nginx
+  when: ansible_distribution == "Ubuntu"
+  debug:
+    var: nginx_config_test.stdout
+
 ```
 
 Arquivo roles/role_base/defaults/main.yml
@@ -150,7 +141,7 @@ Para aplicar as configurações nos servidores web01 e web02, execute o seguinte
 
 ```bash
 
-ansible-playbook -i inventario.ini playbook.yml
+ansible-playbook -i inventory playbook.yml
 ```
 ## 8. Explicação:
 Diretório host_vars/: Cada servidor tem seu próprio arquivo dentro de host_vars/, onde as variáveis específicas (como pacote e ansible_user) são definidas.
