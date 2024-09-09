@@ -1,227 +1,160 @@
-# Ansible - Uso de Variáveis
+# Ansible - Uso de Variáveis com Role e host_vars
 
-Neste módulo, vamos explorar como trabalhar com variáveis no Ansible, entender os diferentes tipos de variáveis, onde elas podem ser definidas, e como utilizá-las nos playbooks.
+Este guia vai explicar como usar variáveis no Ansible com o uso de roles criadas pelo **Ansible Galaxy** e arquivos `host_vars`, onde as variáveis específicas para cada servidor (host) são definidas.
 
 ## 1. O que são Variáveis no Ansible?
 
-As variáveis no Ansible são usadas para armazenar valores dinâmicos que podem ser reutilizados em diferentes partes de um playbook. Elas permitem que você escreva playbooks mais flexíveis, fáceis de manter, e com menos repetições de código.
+As variáveis no Ansible são usadas para armazenar valores dinâmicos que podem ser reutilizados em diferentes partes de um playbook ou role. Elas permitem escrever automações flexíveis e reutilizáveis. No nosso caso, vamos definir variáveis específicas para cada servidor em arquivos dentro do diretório `host_vars`.
 
-### Exemplos de Variáveis:
-- Definir o nome de um pacote
-- Armazenar endereços IP de servidores
-- Definir caminhos de diretórios ou arquivos
+### Exemplo de Uso de Variáveis com `host_vars` e Roles
 
-### Sintaxe:
-As variáveis no Ansible são referenciadas usando a sintaxe `{{ nome_da_variavel }}`.
+## 2. Estrutura do Projeto com `host_vars` e Roles
 
-Exemplo:
-```yaml
-vars:
-  pacote: nginx
-
-tasks:
-  - name: Instalar {{ pacote }}
-    apt:
-      name: "{{ pacote }}"
-      state: present
-```
-2. Onde Definir Variáveis?
-As variáveis no Ansible podem ser definidas em diferentes locais, dependendo do escopo e da necessidade. Aqui estão os locais mais comuns para definir variáveis:
-
-#### 2.1. No Próprio Playbook:
-Você pode definir variáveis diretamente dentro de um playbook na seção vars.
-
-Exemplo:
-
-```yaml
-
----
-- name: Instalar pacotes
-  hosts: all
-  vars:
-    pacote: nginx
-  tasks:
-    - name: Instalar {{ pacote }}
-      apt:
-        name: "{{ pacote }}"
-        state: present
-```
-#### 2.2. Arquivos de Variáveis:
-Você também pode definir variáveis em arquivos separados e carregá-las em um playbook. Isso ajuda a organizar melhor as variáveis.
-
-Exemplo de arquivo de variáveis (vars/main.yml):
-
-```yaml
-
-pacote: nginx
-port: 8080
-```
-Playbook referenciando o arquivo de variáveis:
-
-```yaml
-
----
-- name: Instalar e configurar serviço
-  hosts: all
-  vars_files:
-    - vars/main.yml
-  tasks:
-    - name: Instalar {{ pacote }}
-      apt:
-        name: "{{ pacote }}"
-        state: present
-    - name: Configurar porta
-      lineinfile:
-        path: /etc/nginx/sites-available/default
-        regexp: '^listen'
-        line: "listen {{ port }};"
-```
-#### 2.3. Group Vars e Host Vars:
-Você pode definir variáveis específicas para grupos de hosts ou para hosts individuais.
-
-Group Vars: Definem variáveis para um grupo inteiro de hosts.
-Host Vars: Definem variáveis específicas para um host individual.
-Estrutura de diretórios:
+O Ansible irá buscar os arquivos específicos de cada host no diretório `host_vars/`. Aqui está a estrutura do projeto:
 
 ```bash
-
-group_vars/
-  webservers.yml
-host_vars/
-  web1.yml
-  web2.yml
+.
+├── playbook.yml           # O playbook principal
+├── inventario.ini         # O arquivo de inventário
+├── host_vars/             # Diretório contendo variáveis específicas de cada host
+│   ├── web01.yml          # Variáveis específicas para web01
+│   └── web02.yml          # Variáveis específicas para web02
+└── roles/
+    └── role_base/         # Role criada com Ansible Galaxy
+        ├── tasks/
+        │   └── main.yml   # Tarefas da role
+        ├── defaults/
+        │   └── main.yml   # Variáveis padrão (como `port`)
+        ├── handlers/
+        │   └── main.yml   # Handlers para reiniciar serviços
+        ├── meta/
+        │   └── main.yml   # Metadados da role
+        └── README.md      # Descrição da role
 ```
-Conteúdo do arquivo group_vars/webservers.yml:
+## 3. Arquivo playbook.yml
+Este é o playbook principal, que aplica a role role_base em todos os servidores definidos no inventário.
 
 ```yaml
-
-pacote: nginx
-port: 80
+---
+- name: Aplicar configuração nos servidores web
+  hosts: webservers
+  become: yes
+  roles:
+    - role_base
 ```
-#### 2.4. Definir Variáveis no Inventário:
-As variáveis também podem ser definidas diretamente no arquivo de inventário.
-
-Exemplo de inventário com variáveis:
+## 4. Arquivo inventario
+Este inventário lista os hosts web01 e web02 no grupo webservers. O Ansible utilizará os arquivos correspondentes em host_vars/ para buscar as variáveis específicas de cada host.
 
 ```ini
 
+# inventario.ini
 [webservers]
-web1 ansible_host=192.168.1.101 pacote=nginx
-web2 ansible_host=192.168.1.102 pacote=apache
+web01 ansible_host=192.168.1.101
+web02 ansible_host=192.168.1.102
 ```
 
-#### 2.5. Passagem de Variáveis pela Linha de Comando:
-Você pode passar variáveis diretamente ao executar um playbook usando a opção -e.
+## 5. Diretório host_vars/ (Definindo Variáveis por Host)
+Os arquivos host_vars/web01.yml e host_vars/web02.yml contêm as variáveis específicas de cada servidor (host). O Ansible vai procurar os arquivos de variáveis baseados no nome do host.
 
-Exemplo:
-
-```bash
-ansible-playbook playbook.yml -e "pacote=nginx"
-```
-3. Tipos de Variáveis
-#### 3.1. Variáveis Escalares:
-São variáveis simples que armazenam valores únicos.
-
-Exemplo:
-
+host_vars/web01.yml (para web01 rodando Ubuntu e Nginx)
 ```yaml
 
-vars:
-  pacote: nginx
-  port: 8080
+---
+# Variáveis específicas para web01 (Ubuntu e Nginx)
+pacote: nginx
+ansible_host: 192.168.1.101
+ansible_user: adminlx
+ansible_become: yes
+host_vars/web02.yml (para web02 rodando CentOS e Apache)
 ```
-#### 3.2. Variáveis de Lista:
-As listas armazenam múltiplos valores.
-
-Exemplo:
-
 ```yaml
 
-vars:
-  pacotes:
-    - nginx
-    - apache
-    - mysql
-```
-Uso em uma tarefa:
-```yaml
-
-tasks:
-  - name: Instalar pacotes
-    apt:
-      name: "{{ item }}"
-      state: present
-    loop: "{{ pacotes }}"
-``` 
-#### 3.3. Variáveis de Dicionário:
-Dicionários são usados para armazenar pares chave-valor.
-
-Exemplo:
-
-```yaml
-
-vars:
-  servidor:
-    nome: web1
-    ip: 192.168.1.101
-    porta: 8080
+---
+# Variáveis específicas para web02 (CentOS e Apache)
+pacote: httpd
+ansible_host: 192.168.1.102
+ansible_user: adminlx
+ansible_become: yes
 ```
 
-Uso em uma tarefa:
+## 6. Role role_base (Estrutura da Role)
+A role role_base foi criada com o comando ansible-galaxy init role_base. Ela contém as tarefas principais que serão aplicadas a ambos os servidores (com base nas variáveis definidas nos arquivos host_vars/).
+
+Arquivo roles/role_base/tasks/main.yml
+Este arquivo contém as tarefas que instalam o pacote adequado e configuram o serviço com base nas variáveis definidas para cada servidor.
+
 ```yaml
+---
+# Instalar o pacote correto com base no sistema operacional
+- name: Instalar {{ pacote }} no Ubuntu
+  apt:
+    name: "{{ pacote }}"
+    state: present
+  when: ansible_distribution == "Ubuntu"
+  notify: "Reiniciar Nginx"
 
-tasks:
-  - name: Exibir informações do servidor
-    debug:
-      msg: "Servidor {{ servidor.nome }} está no IP {{ servidor.ip }} e porta {{ servidor.porta }}"
+- name: Instalar {{ pacote }} no CentOS
+  yum:
+    name: "{{ pacote }}"
+    state: present
+  when: ansible_distribution == "CentOS"
+  notify: "Reiniciar Apache"
+
+# Configurar o serviço no Ubuntu
+- name: Configurar {{ pacote }} no Ubuntu
+  lineinfile:
+    path: /etc/nginx/nginx.conf
+    regexp: '^listen'
+    line: "listen {{ port }};"
+  when: ansible_distribution == "Ubuntu"
+  notify: "Reiniciar Nginx"
+
+# Configurar o serviço no CentOS
+- name: Configurar {{ pacote }} no CentOS
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: '^Listen'
+    line: "Listen {{ port }}"
+  when: ansible_distribution == "CentOS"
+  notify: "Reiniciar Apache"
 ```
-### 4. Sobrescrevendo Variáveis
-Quando várias fontes de variáveis estão em uso (como inventários, arquivos de variáveis, e variáveis passadas pela linha de comando), o Ansible tem uma ordem de precedência que determina quais variáveis têm prioridade.
 
-Ordem de Precedência (da menor para a maior):
-Defaults de Roles (defaults/main.yml)
-Group Vars
-Host Vars
-Variáveis definidas em arquivos incluídos com vars_files
-Variáveis definidas diretamente no playbook (vars)
-Variáveis passadas pela linha de comando (-e)
-Isso significa que as variáveis passadas pela linha de comando sempre sobrescrevem quaisquer outras.
+Arquivo roles/role_base/defaults/main.yml
+Aqui definimos a variável port, que será a mesma para ambos os servidores.
 
-### 5. Exemplo Completo
-Aqui está um exemplo completo de playbook que usa diferentes tipos de variáveis e fontes de variáveis:
+```yaml
+---
+# Variável padrão compartilhada entre os servidores
+port: 8080
+```
+Arquivo roles/role_base/handlers/main.yml
+Este arquivo contém os handlers para reiniciar os serviços após as configurações serem aplicadas.
 
 ```yaml
 
 ---
-- name: Configurar Webservers
-  hosts: webservers
-  vars:
-    pacote: nginx
-    port: 8080
-    usuarios:
-      - nome: deploy
-      - nome: admin
-  tasks:
-    - name: Instalar {{ pacote }}
-      apt:
-        name: "{{ pacote }}"
-        state: present
+# Handlers para reiniciar serviços
+- name: Reiniciar Nginx
+  service:
+    name: nginx
+    state: restarted
 
-    - name: Configurar a porta do serviço
-      lineinfile:
-        path: /etc/nginx/sites-available/default
-        regexp: '^listen'
-        line: "listen {{ port }};"
-
-    - name: Criar usuários
-      user:
-        name: "{{ item.nome }}"
-        state: present
-      loop: "{{ usuarios }}"
-
-Neste exemplo, estamos:
+- name: Reiniciar Apache
+  service:
+    name: httpd
+    state: restarted
 ```
-Instalando o pacote nginx (definido como variável)
-Configurando a porta do serviço Nginx
-Criando usuários a partir de uma lista de variáveis
-Com este módulo, você aprendeu como trabalhar com variáveis no Ansible, como defini-las em diferentes lugares, os tipos de variáveis disponíveis, e a ordem de precedência entre elas. Variáveis tornam os playbooks mais flexíveis e reutilizáveis.
+
+## 7. Executando o Playbook
+Para aplicar as configurações nos servidores web01 e web02, execute o seguinte comando:
+
+```bash
+
+ansible-playbook -i inventario.ini playbook.yml
+```
+## 8. Explicação:
+Diretório host_vars/: Cada servidor tem seu próprio arquivo dentro de host_vars/, onde as variáveis específicas (como pacote e ansible_user) são definidas.
+Diretório defaults/: Define variáveis padrão, como port, que é compartilhada entre os dois servidores.
+Tarefas na Role: As tarefas da role role_base instalam os pacotes corretos (Nginx para web01 e Apache para web02) e configuram os serviços usando as variáveis do arquivo host_vars correspondente.
+Com essa estrutura, o Ansible sabe qual arquivo de variáveis usar com base no nome do host definido no inventário, e as tarefas são executadas conforme necessário em cada servidor. Isso permite que a automação seja eficiente e flexível para diferentes ambientes.
+
