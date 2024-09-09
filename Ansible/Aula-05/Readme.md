@@ -48,7 +48,7 @@ Este inventário lista os hosts web01 e web02 no grupo webservers. O Ansible uti
 
 # inventory
 [webservers]
-web01 ansible_host=192.168.1.101
+web01 ansible_host=1192.168.2.74
 ```
 
 ## 5. Diretório host_vars/ (Definindo Variáveis por Host)
