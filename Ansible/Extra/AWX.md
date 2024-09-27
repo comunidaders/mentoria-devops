@@ -42,12 +42,16 @@ Crie um arquivo chamado kustomization.yaml no seu repositório com o seguinte co
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - github.com/ansible/awx-operator/config/default?ref=<tag>
+  # Find the latest tag here: https://github.com/ansible/awx-operator/releases
+  - github.com/ansible/awx-operator/config/default?ref=2.7.2
+  - awx-demo.yml
 
-# Definir as tags de imagem para corresponder à versão do git escolhida
+# Set the image tags to match the git version from above
 images:
   - name: quay.io/ansible/awx-operator
-    newTag: <tag>
+    newTag: 2.7.2
+
+# Specify a custom namespace in which to install AWX
 namespace: awx
 
 ```
