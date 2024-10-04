@@ -36,7 +36,7 @@ Este é o playbook principal, que aplica a role role_base em todos os servidores
 ```yaml
 ---
 - name: Aplicar configuração nos servidores web
-  hosts: webservers
+  hosts: {{ inventory }}
   become: yes
   roles:
     - role_base
